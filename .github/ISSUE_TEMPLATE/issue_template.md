@@ -13,13 +13,13 @@ assignees: ByteZent
 
 Please select one of the following options (delete those that do not apply):
 
-[ ] Bug Report: Something is not working as expected or causes a crash.
+- [ ] Bug Report: Something is not working as expected or causes a crash.
 
-[ ] Feature Request: Suggestion for a new functionality or enhancement.
+- [ ] Feature Request: Suggestion for a new functionality or enhancement.
 
-[ ] Refactoring/Technical Debt: Internal code improvement, dependency update, or architectural task.
+- [ ] Refactoring/Technical Debt: Internal code improvement, dependency update, or architectural task.
 
-[ ] Documentation: Improvement to documentation, README, or API specification.
+- [ ] Documentation: Improvement to documentation, README, or API specification.
 
 🌍 Affected Component & Environment
 
@@ -27,25 +27,25 @@ Which parts of the Swiss-Village system are affected? (Multiple selections possi
 
 1. Backend & Server Instance (Ruby on Rails Monolith)
 
-[ ] Identity & Account (Authentication, Profiles, Deletion)
+- [ ] Identity & Account (Authentication, Profiles, Deletion)
 
-[ ] Content & Data (News, Events, Directory, Forms)
+- [ ] Content & Data (News, Events, Directory, Forms)
 
-[ ] Federation (ActivityPub In-/Outbox, WebFinger)
+- [ ] Federation (ActivityPub In-/Outbox, WebFinger)
 
-[ ] Notifications (Email, Push Queue)
+- [ ] Notifications (Email, Push Queue)
 
-[ ] Database Schema (PostgreSQL/Redis)
+- [ ] Database Schema (PostgreSQL/Redis)
 
 2. Clients & Interfaces
 
-[ ] Web Frontend (Hotwire/SSR)
+- [ ] Web Frontend (Hotwire/SSR)
 
-[ ] Mobile App Shell (React Native/Flutter)
+- [ ] Mobile App Shell (React Native/Flutter)
 
-[ ] Admin UI (For municipal staff)
+- [ ] Admin UI (For municipal staff)
 
-[ ] JSON API/OpenAPI Spec (Public API)
+- [ ] JSON API/OpenAPI Spec (Public API)
 
 3. Environment
 
