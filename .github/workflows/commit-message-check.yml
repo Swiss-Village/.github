@@ -9,52 +9,71 @@ on:
 
 jobs:
   validate-commit-messages:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    name: Commit message and PR title checks
 
-      - name: Validate commits and PR title
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
+    on:
+      pull_request:
+        types: [opened, edited, synchronize]
+      push:
+        branches:
+          - main
 
-          pattern='^(feat|fix|chore|docs|style|refactor|perf|test)(\([a-z0-9_-]+\))?: .+'
+    jobs:
+      validate-commit-messages:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout (full history)
+            uses: actions/checkout@v4
+            with:
+              fetch-depth: 0
 
-          # Validate PR title when this run is for a pull request
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            pr_title="${{ github.event.pull_request.title }}"
-            echo "Checking PR title: $pr_title"
-            echo "$pr_title" | grep -Eq "$pattern" || {
-              echo "❌ PR title does not follow Conventional Commits format."
-              echo "Example: feat(api): add user authentication"
-              exit 1
-            }
-          fi
+          - name: Install commit-msg hook from repo
+            run: |
+              if [ -f conventions/hooks/commit-msg ]; then
+                mkdir -p .git/hooks
+                cp conventions/hooks/commit-msg .git/hooks/commit-msg
+                chmod +x .git/hooks/commit-msg
+                echo "Installed .git/hooks/commit-msg from conventions/hooks/commit-msg"
+              else
+                echo "conventions/hooks/commit-msg not found in repository; cannot install hook." >&2
+                exit 1
+              fi
 
-          # Validate commit messages in the push or PR
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            # For PRs, compare head and base
-            base_sha="${{ github.event.pull_request.base.sha }}"
-            head_sha="${{ github.event.pull_request.head.sha }}"
-            range="$base_sha..$head_sha"
-          else
-            range="HEAD~10..HEAD"
-          fi
+          - name: Validate PR title (using installed hook)
+            if: ${{ github.event_name == 'pull_request' }}
+            run: |
+              set -euo pipefail
+              echo "${{ github.event.pull_request.title }}" > /tmp/commit_msg.txt
+              echo "Checking PR title: $(cat /tmp/commit_msg.txt)"
+              .git/hooks/commit-msg /tmp/commit_msg.txt
 
-          echo "Checking commit messages in range: $range"
-          commits=$(git log --format=%B --no-merges $range)
+          - name: Validate commit messages in range (using installed hook)
+            run: |
+              set -euo pipefail
 
-          # Iterate over each commit message first line
-          echo "$commits" | awk 'BEGIN{RS="\n\n"} {print $0}' | while IFS= read -r commit; do
-            first_line=$(echo "$commit" | sed -n '1p')
-            echo "Checking commit: $first_line"
-            echo "$first_line" | grep -Eq "$pattern" || {
-              echo "❌ Commit message does not follow Conventional Commits format: '$first_line'"
-              echo "Example: feat(api): add user authentication"
-              exit 1
-            }
-          done
+              if [ "${{ github.event_name }}" = "pull_request" ]; then
+                base_sha="${{ github.event.pull_request.base.sha }}"
+                head_sha="${{ github.event.pull_request.head.sha }}"
+                # List commit SHAs in the PR (exclude merges)
+                shas=$(git rev-list --no-merges $base_sha..$head_sha || true)
+              else
+                # On push, check the last 50 non-merge commits reachable from HEAD
+                shas=$(git rev-list --no-merges --max-count=50 HEAD || true)
+              fi
 
-          echo "All commit messages and PR title (if present) follow the convention."
+              if [ -z "${shas}" ]; then
+                echo "No commits to check."
+                exit 0
+              fi
+
+              echo "Checking commit SHAs:"
+              echo "$shas"
+
+              for sha in $shas; do
+                git show -s --format=%B $sha > /tmp/commit_msg.txt
+                first_line=$(sed -n '1p' /tmp/commit_msg.txt)
+                echo "Checking commit $sha: $first_line"
+                .git/hooks/commit-msg /tmp/commit_msg.txt
+              done
+
+              echo "All commit messages and PR title (if present) follow the convention."
