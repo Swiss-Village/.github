@@ -1,0 +1,60 @@
+name: Commit message and PR title checks
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+  push:
+    branches:
+      - main
+
+jobs:
+  validate-commit-messages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate commits and PR title
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          pattern='^(feat|fix|chore|docs|style|refactor|perf|test)(\([a-z0-9_-]+\))?: .+'
+
+          # Validate PR title when this run is for a pull request
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            pr_title="${{ github.event.pull_request.title }}"
+            echo "Checking PR title: $pr_title"
+            echo "$pr_title" | grep -Eq "$pattern" || {
+              echo "❌ PR title does not follow Conventional Commits format."
+              echo "Example: feat(api): add user authentication"
+              exit 1
+            }
+          fi
+
+          # Validate commit messages in the push or PR
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # For PRs, compare head and base
+            base_sha="${{ github.event.pull_request.base.sha }}"
+            head_sha="${{ github.event.pull_request.head.sha }}"
+            range="$base_sha..$head_sha"
+          else
+            range="HEAD~10..HEAD"
+          fi
+
+          echo "Checking commit messages in range: $range"
+          commits=$(git log --format=%B --no-merges $range)
+
+          # Iterate over each commit message first line
+          echo "$commits" | awk 'BEGIN{RS="\n\n"} {print $0}' | while IFS= read -r commit; do
+            first_line=$(echo "$commit" | sed -n '1p')
+            echo "Checking commit: $first_line"
+            echo "$first_line" | grep -Eq "$pattern" || {
+              echo "❌ Commit message does not follow Conventional Commits format: '$first_line'"
+              echo "Example: feat(api): add user authentication"
+              exit 1
+            }
+          done
+
+          echo "All commit messages and PR title (if present) follow the convention."
