@@ -1,0 +1,37 @@
+#!/usr/bin/env sh
+# commit-msg hook to enforce Conventional Commits subset
+# Install: cp .github/conventions/hooks/commit-msg .git/hooks/commit-msg && chmod +x .git/hooks/commit-msg
+
+# Allow CI or contributors to bypass the hook by setting SKIP_COMMIT_CHECK=1
+if [ "${SKIP_COMMIT_CHECK}" = "1" ]; then
+  exit 0
+fi
+
+if [ "$#" -lt 1 ]; then
+  echo "❌ commit-msg hook requires a path to the commit message file" >&2
+  exit 1
+fi
+
+commit_msg_file="$1"
+commit_msg="$(sed -n '1,1p' "$commit_msg_file")"
+
+pattern='^(feat|fix|chore|docs|style|refactor|perf|test)(\([a-z0-9_-]+\))?: .+'
+
+echo "Checking commit message: $commit_msg"
+
+echo "$commit_msg" | grep -Eq "$pattern"
+rc=$?
+if [ $rc -ne 0 ]; then
+  cat <<'EOF' >&2
+❌ Commit message does not follow Conventional Commits format.
+
+Format: <type>(<scope>): <short summary>
+Allowed types: feat, fix, chore, docs, style, refactor, perf, test
+Example: feat(api): add user authentication
+
+You can bypass this check by setting SKIP_COMMIT_CHECK=1 in your environment (not recommended for CI).
+EOF
+  exit 1
+fi
+
+exit 0

@@ -2,6 +2,11 @@
 
 Swiss‑Village is an open-source project to build a federated, privacy-respecting e‑government platform for Swiss municipalities and villages. The goal is to give small local governments modern, accessible digital services while keeping control of data in the hands of citizens and municipalities.
 
+
+## Project Substructure
+
+
+
 ## Vision
 
 - Federated server system: municipalities may self-host an instance, or use a centrally managed hosting option.

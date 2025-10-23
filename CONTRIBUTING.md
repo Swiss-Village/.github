@@ -45,6 +45,31 @@ Thank you for your interest in contributing to Swiss‑Village. This document ex
 
 Please follow the project's `CODE_OF_CONDUCT.md` (coming soon). Be respectful and constructive in all communications.
 
+## Developer setup
+
+After cloning the repository, run the hooks installer to set up local git hooks used by the project:
+
+```sh
+# from repository root
+sh .github/scripts/install-hooks.sh
+```
+
+This will copy hooks from `.github/conventions/hooks/` into your local `.git/hooks/` and make them executable.
+
+### DCO (Developer Certificate of Origin)
+
+We recommend contributors sign commits with the DCO sign-off. Use `git -s` when committing to add a Signed-off-by trailer:
+
+```sh
+git commit -s -m "feat(api): add user authentication"
+```
+
+If you forget to sign off a commit, you can add the trailer to the last commit with:
+
+```sh
+git commit --amend -s --no-edit
+```
+
 ## Getting help
 
 If you need guidance, mention `@maintainers` in an issue or open a discussion topic describing what you want to do.
